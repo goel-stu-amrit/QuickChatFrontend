@@ -2,12 +2,13 @@ import {useState, useEffect} from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { createNewMessage, getAllMessage } from "../../../apiCalls/message"
 import { showLoader, hideLoader } from "../../../redux/loaderSlice"
+import { clearUnreadMessageCount } from "../../../apiCalls/chat"
 import toast from "react-hot-toast"
 import moment from "moment"
 
 const ChatArea = () =>{
     const dispatch = useDispatch()
-    const {selectedChat, user} = useSelector(state => state.userReducer)
+    const {selectedChat, user, allChats} = useSelector(state => state.userReducer)
     const selectedUser = selectedChat.members.find(u => u._id !== user._id)
     const [message, setMessage] = useState("")
     const [allMessages, setAllMessages] = useState([])
@@ -66,9 +67,37 @@ const ChatArea = () =>{
             toast.error(error.message)
         }
     }
+
+    const getFullName =(user) =>{
+        let fName = user?.firstName.charAt(0).toUpperCase() + user?.firstName.slice(1).toLowerCase()
+        let lName = user?.lastName.charAt(0).toUpperCase() + user?.lastName.slice(1).toLowerCase()
+        return `${fName} ${lName}`
+    }
+
+    const clearUnreadMessages = async () =>{
+        try{
+            dispatch(showLoader())
+            const response = await clearUnreadMessageCount(selectedChat._id)
+            dispatch(hideLoader())
+            if(response.success){
+                allChats.map( chat => {
+                    if(chat._id === selectedChat._id){
+                        return response.data
+                    }
+                    return chat
+                })
+            }
+        }catch(error){
+            dispatch(hideLoader())
+            toast.error(error.message)
+        }
+    }
     
     useEffect(()=>{
         getMessages()
+        if(selectedChat?.lastMessage?.sender !== user._id){
+            clearUnreadMessages()
+        }
     },[selectedChat])
 
 
@@ -76,7 +105,7 @@ const ChatArea = () =>{
     return <>
         <div className = "app-chat-area">
             <div className="app-chat-area-header">
-                {selectedUser.firstName.charAt(0).toUpperCase() + selectedUser.firstName.slice(1) + " " + selectedUser.lastName.charAt(0).toUpperCase() + selectedUser.lastName.slice(1)}
+                {getFullName(selectedUser)}
             </div>
             <div className="main-chat-area">
                 {
@@ -90,6 +119,10 @@ const ChatArea = () =>{
                                     </div>
                                     <div className="message-timestamp" style={isCurrentUserSender? {float:"right"} : {float: "left"}}>
                                         {formatTime(msg.createdAt)}
+                                        {   
+                                            isCurrentUserSender && msg.read && 
+                                            <i className = "fa fa-check-circle" aria-hidden="true" style={{color : "#e74c3c"}} />
+                                        }
                                     </div>
                                 </div>
                             </div>
