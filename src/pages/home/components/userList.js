@@ -30,8 +30,8 @@ const UsersList = ({searchKey})=>{
     }
 
     const getFullName =(user) =>{
-        let fName = user?.firstName.toLowerCase().charAt(0).toUpperCase() + user?.firstName.slice(1)
-        let lName = user?.lastName.toLowerCase().charAt(0).toUpperCase() + user?.lastName.slice(1)
+        let fName = user?.firstName.charAt(0).toUpperCase() + user?.firstName.slice(1).toLowerCase()
+        let lName = user?.lastName.charAt(0).toUpperCase() + user?.lastName.slice(1).toLowerCase()
         return `${fName} ${lName}`
     }
 
@@ -61,7 +61,7 @@ const UsersList = ({searchKey})=>{
     const getLastMessage = (userId) =>{
         const chat = allChats.find(chat =>chat.members.map(m => m._id).includes(userId))
 
-        if(!chat){
+        if(!chat || !chat?.lastMessage){
             return ""
         }else{
             const msgPrefix = chat?.lastMessage?.sender === currentUser._id ? "You: " : "";
@@ -71,22 +71,40 @@ const UsersList = ({searchKey})=>{
 
     const getLastMessageTimeStamp = (userId) =>{
         const chat = allChats.find(chat =>chat.members.map(m => m._id).includes(userId))
-
-        if(!chat && chat?.lastMessage){
+        if(!chat || !chat?.lastMessage){
             return ""
         }else{
             return moment(chat?.lastMessage?.createdAt).format('hh:mm A')
         }
     } 
 
+    const getUnreadMeesageCount = (userId) =>{
+        const chat = allChats.find(chat => 
+            chat.members.map(m=>m._id).includes(userId)
+        )
+
+        if(chat && chat.unreadMessageCount && chat.lastMessage.sender !== currentUser._id){
+            return <div className="unread-message-counter">{chat.unreadMessageCount}</div>
+        }else return ""
+    }
+
+    const getData = () =>{
+        if(searchKey === ""){
+            return allChats
+        }else{
+            allUsers.filter(user=>{
+                return  (user.firstName.toLowerCase().includes(searchKey.toLowerCase()) || 
+                user.lastName.toLowerCase().includes(searchKey.toLowerCase()))
+            })
+        }
+    }
+
     return(
-        allUsers
-        .filter(user =>{
-            return ((user.firstName.toLowerCase().includes(searchKey.toLowerCase()) ||
-            user.lastName.toLowerCase().includes(searchKey.toLowerCase())) && searchKey) ||
-            (allChats.some(chat =>chat.members.map(m => m._id).includes(user._id)))
-        })
-        .map(user =>{
+        getData().map(obj =>{
+            let user = obj
+            if(obj.members){
+                user = obj.members.find(mem => mem._id !== currentUser._id)
+            }
             return <div className="user-search-filter" onClick={()=>openChat(user._id)} key={user._id}>
                 <div className={IsSelectedChat(user) ? "selected-user" :"filtered-user"  }>
                     <div className="filter-user-display">
@@ -96,7 +114,10 @@ const UsersList = ({searchKey})=>{
                             <div className="user-display-name">{getFullName(user)}</div>
                             <div className="user-display-email">{getLastMessage(user._id) || user.email}</div>
                         </div>
-                        <div className="last-message-timestamp">{getLastMessageTimeStamp(user._id)}</div>
+                        <div>
+                            {getUnreadMeesageCount(user._id)}
+                            <div className="last-message-timestamp">{getLastMessageTimeStamp(user._id)}</div>
+                        </div>
                         {!allChats.find(chat => chat.members.map(m => m._id).includes(user._id)) &&
                             <div className="user-start-chat">
                                 <button 

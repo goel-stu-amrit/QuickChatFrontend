@@ -403,6 +403,19 @@ i{
   font-size: 13px;
 }
 
+.unread-message-counter{
+  font-size: 13px;
+  text-align: center;
+  float: right;
+  padding-top: 3px;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background-color: #e74c3c;
+  font-weight: bold;
+  color: white;
+}
+
 .last-message-timestamp{
   font-size: 13px;
 }

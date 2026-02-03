@@ -4,8 +4,8 @@ const Header = () => {
   const { user } = useSelector(state => state.userReducer)
 
   const getFullName =() =>{
-    let fName = user?.firstName.toLowerCase().charAt(0).toUpperCase() + user?.firstName.slice(1)
-    let lName = user?.lastName.toLowerCase().charAt(0).toUpperCase() + user?.lastName.slice(1)
+    let fName = user?.firstName.charAt(0).toUpperCase() + user?.firstName.slice(1).toLowerCase()
+    let lName = user?.lastName.charAt(0).toUpperCase() + user?.lastName.slice(1).toLowerCase()
 
     return `${fName} ${lName}`
   }
