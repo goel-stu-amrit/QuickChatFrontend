@@ -3,10 +3,11 @@ import { useDispatch, useSelector } from "react-redux"
 import { createNewMessage, getAllMessage } from "../../../apiCalls/message"
 import { showLoader, hideLoader } from "../../../redux/loaderSlice"
 import { clearUnreadMessageCount } from "../../../apiCalls/chat"
+import store from '../../../redux/store'
 import toast from "react-hot-toast"
 import moment from "moment"
 
-const ChatArea = () =>{
+const ChatArea = ({ socket }) =>{
     const dispatch = useDispatch()
     const {selectedChat, user, allChats} = useSelector(state => state.userReducer)
     const selectedUser = selectedChat.members.find(u => u._id !== user._id)
@@ -20,9 +21,14 @@ const ChatArea = () =>{
                 sender: user._id,
                 text: message
             }
-            dispatch(showLoader())
+
+            socket.emit('send-message', {
+                ...newMessage,
+                members: selectedChat.members.map(m=>m._id),
+                read:false,
+                createdAt:moment()
+            })
             const response = await createNewMessage(newMessage)
-            dispatch(hideLoader())
 
             if(response.success){
                 setMessage("")
@@ -98,16 +104,25 @@ const ChatArea = () =>{
         if(selectedChat?.lastMessage?.sender !== user._id){
             clearUnreadMessages()
         }
+        socket.off('receive-message').on('receive-message', (data)=>{
+            const selectedChat = store.getState().userReducer.selectedChat
+            if(selectedChat._id === data.chatId){
+                setAllMessages(prevmsg =>[...prevmsg , data])
+            }
+        })
     },[selectedChat])
 
+    useEffect(()=>{
+        const msgContainer = document.getElementById('main-chat-area')
+        msgContainer.scrollTop = msgContainer?.scrollHeight
+    },[allMessages])
 
-    //const dispatch = useDispatch()
     return <>
         <div className = "app-chat-area">
             <div className="app-chat-area-header">
                 {getFullName(selectedUser)}
             </div>
-            <div className="main-chat-area">
+            <div className="main-chat-area" id="main-chat-area">
                 {
                     allMessages.map(msg => {
                         const isCurrentUserSender = msg.sender === user._id
