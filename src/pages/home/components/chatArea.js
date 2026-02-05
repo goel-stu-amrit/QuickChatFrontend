@@ -6,6 +6,7 @@ import { clearUnreadMessageCount } from "../../../apiCalls/chat"
 import store from '../../../redux/store'
 import toast from "react-hot-toast"
 import moment from "moment"
+import { setAllChats } from "../../../redux/usersSlice"
 
 const ChatArea = ({ socket }) =>{
     const dispatch = useDispatch()
@@ -26,7 +27,7 @@ const ChatArea = ({ socket }) =>{
                 ...newMessage,
                 members: selectedChat.members.map(m=>m._id),
                 read:false,
-                createdAt:moment()
+                createdAt:moment().format('YYYY-MM-DD hh:mm:ss')
             })
             const response = await createNewMessage(newMessage)
 
@@ -82,9 +83,11 @@ const ChatArea = ({ socket }) =>{
 
     const clearUnreadMessages = async () =>{
         try{
-            dispatch(showLoader())
+            socket.emit('clear-unread-message', {
+                chatId : selectedChat._id,
+                members: selectedChat.members.map(m=>m._id)
+            })
             const response = await clearUnreadMessageCount(selectedChat._id)
-            dispatch(hideLoader())
             if(response.success){
                 allChats.map( chat => {
                     if(chat._id === selectedChat._id){
@@ -94,7 +97,6 @@ const ChatArea = ({ socket }) =>{
                 })
             }
         }catch(error){
-            dispatch(hideLoader())
             toast.error(error.message)
         }
     }
@@ -104,10 +106,38 @@ const ChatArea = ({ socket }) =>{
         if(selectedChat?.lastMessage?.sender !== user._id){
             clearUnreadMessages()
         }
-        socket.off('receive-message').on('receive-message', (data)=>{
+
+        socket.on('receive-message', (message)=>{
             const selectedChat = store.getState().userReducer.selectedChat
+            if(selectedChat._id === message.chatId){
+                setAllMessages(prevmsg =>[...prevmsg , message])
+            }
+            if(selectedChat._id === message.chatId && message.sender !== user._id){
+                clearUnreadMessages()
+            }
+        })
+
+        socket.on('cleared-message-count', data=>{
+            const selectedChat  = store.getState().userReducer.selectedChat
+            const allChats = store.getState().userReducer.allChats
+
             if(selectedChat._id === data.chatId){
-                setAllMessages(prevmsg =>[...prevmsg , data])
+                const updatedChat = allChats.map(chat =>{
+                    if(chat._id === data.chatId){
+                        return {
+                            ...chat,
+                            unreadMessageCount:0
+                        }
+                    }
+                    return chat
+                })
+                dispatch(setAllChats(updatedChat))
+
+                setAllMessages(prevMsg=>{
+                    return prevMsg.map(msg=>{
+                        return {...msg, read:true}
+                    })
+                })
             }
         })
     },[selectedChat])

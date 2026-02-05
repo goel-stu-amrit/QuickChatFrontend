@@ -1,11 +1,13 @@
+import {useEffect} from 'react'
 import toast from "react-hot-toast"
 import { useDispatch, useSelector } from "react-redux"
 import { createNewChat } from "../../../apiCalls/chat"
 import { showLoader, hideLoader} from "../../../redux/loaderSlice"
 import { setAllChats, setSelectedChat } from "../../../redux/usersSlice"
+import store from '../../../redux/store'
 import moment from "moment"
 
-const UsersList = ({searchKey})=>{
+const UsersList = ({searchKey, socket})=>{
     const {allUsers, allChats, user:currentUser, selectedChat} = useSelector(state => state.userReducer)
     const dispatch = useDispatch()
 
@@ -98,6 +100,34 @@ const UsersList = ({searchKey})=>{
             })
         }
     }
+
+    useEffect(()=>{
+        socket.on('receive-message', (message)=>{
+            const selectedChat = store.getState().userReducer.selectedChat
+            let allChats = store.getState().userReducer.allChats
+
+            if(selectedChat?._id !== message.chatId){
+                const updatedChat = allChats.map(chat =>{
+                    if(chat._id === message.chatId){
+                        return {
+                            ...chat,
+                            unreadMessageCount: (chat?.unreadMessageCount || 0) + 1,
+                            lastMessage : message
+                        }
+                    }
+                    return chat
+                })
+                allChats = updatedChat
+            }
+            //find latest Chat
+            const latestChat = allChats.find(chat => chat._id === message.chatId)
+            //get allchats except the latest one
+            const otherChats = allChats.filter(chat => chat._id !== message.chatId)
+
+            allChats = [latestChat, ...otherChats]
+            dispatch(setAllChats(allChats))
+        })
+    },[])
 
     return(
         getData().map(obj =>{
