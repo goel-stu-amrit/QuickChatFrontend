@@ -464,7 +464,7 @@ i{
 }
 
 @media only screen and (max-width:1000px) {
-  .filter-user-details{
+  .filter-user-details, .last-message-timestamp, .unread-message-counter {
     display: none;
   }
   .user-search-area{
@@ -476,4 +476,9 @@ i{
   .app-chat-area{
     width: 85%;
   }
+}
+
+.typing-indicator{
+  font-size: 13px;
+  color: grey;
 }

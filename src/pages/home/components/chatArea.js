@@ -14,6 +14,7 @@ const ChatArea = ({ socket }) =>{
     const selectedUser = selectedChat.members.find(u => u._id !== user._id)
     const [message, setMessage] = useState("")
     const [allMessages, setAllMessages] = useState([])
+    const [isTyping, setIsTyping] = useState(false)
 
     const sendMessage = async () =>{
         try{
@@ -140,12 +141,21 @@ const ChatArea = ({ socket }) =>{
                 })
             }
         })
+
+        socket.on('started-typing', (data) =>{
+            if(selectedChat._id === data.chatId && data.sender !== user._id){
+                setIsTyping(true)
+                setTimeout(()=>{
+                    setIsTyping(false)
+                },2000)
+            }
+        })
     },[selectedChat])
 
     useEffect(()=>{
         const msgContainer = document.getElementById('main-chat-area')
         msgContainer.scrollTop = msgContainer?.scrollHeight
-    },[allMessages])
+    },[allMessages, isTyping])
 
     return <>
         <div className = "app-chat-area">
@@ -174,6 +184,7 @@ const ChatArea = ({ socket }) =>{
                         )
                     })
                 }
+                <div className="typing-indicator">{isTyping && <i>typing...</i>}</div>
             </div>
             <div className="send-message-div">
                 <input 
@@ -181,7 +192,14 @@ const ChatArea = ({ socket }) =>{
                     className="send-message-input" 
                     placeholder="type a message" 
                     value={message}
-                    onChange={(e)=> {setMessage(e.target.value)}}
+                    onChange={(e)=> {
+                        setMessage(e.target.value)
+                        socket.emit('user-typing',{
+                            chatId : selectedChat._id,
+                            members:selectedChat.members.map(m=>m._id),
+                            sender:user._id
+                        })
+                    }}
                     onKeyDown = {handleEnter}
                 />
                 <button 
