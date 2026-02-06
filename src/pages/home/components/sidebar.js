@@ -4,7 +4,7 @@ import UsersList from "./userList"
 
 
 
-const Sidebar = () =>{
+const Sidebar = ({socket}) =>{
     const [searchKey, setSearchKey] = useState('')
     return (
         <div className="app-sidebar">
@@ -14,7 +14,7 @@ const Sidebar = () =>{
                 setSearchKey={setSearchKey} 
             />
             {/* // userlist */}
-            <UsersList searchKey={searchKey}/>
+            <UsersList searchKey={searchKey} socket={socket}/>
         </div>
     )
 }
