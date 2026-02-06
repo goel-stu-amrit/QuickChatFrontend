@@ -7,7 +7,7 @@ import { setAllChats, setSelectedChat } from "../../../redux/usersSlice"
 import store from '../../../redux/store'
 import moment from "moment"
 
-const UsersList = ({searchKey, socket})=>{
+const UsersList = ({searchKey, socket, onlineUsers})=>{
     const {allUsers, allChats, user:currentUser, selectedChat} = useSelector(state => state.userReducer)
     const dispatch = useDispatch()
 
@@ -90,13 +90,13 @@ const UsersList = ({searchKey, socket})=>{
         }else return ""
     }
 
-    const getData = () =>{
+    const getData = (searchKey) =>{
         if(searchKey === ""){
             return allChats
         }else{
             allUsers.filter(user=>{
-                return  (user.firstName.toLowerCase().includes(searchKey.toLowerCase()) || 
-                user.lastName.toLowerCase().includes(searchKey.toLowerCase()))
+                return  user.firstName.toLowerCase().includes(searchKey.toLowerCase()) || 
+                user.lastName.toLowerCase().includes(searchKey.toLowerCase())
             })
         }
     }
@@ -130,7 +130,7 @@ const UsersList = ({searchKey, socket})=>{
     },[])
 
     return(
-        getData().map(obj =>{
+        getData(searchKey)?.map(obj =>{
             let user = obj
             if(obj.members){
                 user = obj.members.find(mem => mem._id !== currentUser._id)
@@ -138,8 +138,20 @@ const UsersList = ({searchKey, socket})=>{
             return <div className="user-search-filter" onClick={()=>openChat(user._id)} key={user._id}>
                 <div className={IsSelectedChat(user) ? "selected-user" :"filtered-user"  }>
                     <div className="filter-user-display">
-                        {user.profilePic && <img src={user.profilePic} alt="Profile Pic" className="user-profile-image" />}
-                        {!user.profilePic && <div className={IsSelectedChat(user) ? "user-selected-avatar":"user-default-avatar"}>{getInitials(user)}</div>}
+                        { user.profilePic && 
+                            <img 
+                                src={user.profilePic} 
+                                alt="Profile Pic" 
+                                className="user-profile-image" 
+                                style={onlineUsers.includes(user._id) ? {border:'#82e0aa 3px solid'} : {}} 
+                            />}
+                        { !user.profilePic && 
+                            <div 
+                                className={IsSelectedChat(user) ? "user-selected-avatar":"user-default-avatar"}
+                                style={onlineUsers.includes(user._id) ? {border:'#82e0aa 3px solid'} : {}}
+                            >
+                                {getInitials(user)}
+                            </div>}
                         <div className="filter-user-details">
                             <div className="user-display-name">{getFullName(user)}</div>
                             <div className="user-display-email">{getLastMessage(user._id) || user.email}</div>
