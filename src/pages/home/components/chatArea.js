@@ -7,6 +7,7 @@ import store from '../../../redux/store'
 import toast from "react-hot-toast"
 import moment from "moment"
 import { setAllChats } from "../../../redux/usersSlice"
+import EmojiPicker from "emoji-picker-react"
 
 const ChatArea = ({ socket }) =>{
     const dispatch = useDispatch()
@@ -15,6 +16,7 @@ const ChatArea = ({ socket }) =>{
     const [message, setMessage] = useState("")
     const [allMessages, setAllMessages] = useState([])
     const [isTyping, setIsTyping] = useState(false)
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
     const sendMessage = async () =>{
         try{
@@ -34,6 +36,7 @@ const ChatArea = ({ socket }) =>{
 
             if(response.success){
                 setMessage("")
+                setShowEmojiPicker(false)
             }
 
         }catch(error){
@@ -101,6 +104,10 @@ const ChatArea = ({ socket }) =>{
             toast.error(error.message)
         }
     }
+
+    const handleToggleEmojiPicker = () =>{
+        setShowEmojiPicker(!showEmojiPicker)
+    }
     
     useEffect(()=>{
         getMessages()
@@ -117,6 +124,7 @@ const ChatArea = ({ socket }) =>{
                 clearUnreadMessages()
             }
         })
+        
 
         socket.on('cleared-message-count', data=>{
             const selectedChat  = store.getState().userReducer.selectedChat
@@ -150,6 +158,7 @@ const ChatArea = ({ socket }) =>{
                 },2000)
             }
         })
+        
     },[selectedChat])
 
     useEffect(()=>{
@@ -186,6 +195,12 @@ const ChatArea = ({ socket }) =>{
                 }
                 <div className="typing-indicator">{isTyping && <i>typing...</i>}</div>
             </div>
+            {
+                showEmojiPicker &&
+                <div>
+                    <EmojiPicker onEmojiClick={(e) => setMessage(prev => prev + e.emoji)} />
+                </div>
+            }
             <div className="send-message-div">
                 <input 
                     type="text"
@@ -203,11 +218,16 @@ const ChatArea = ({ socket }) =>{
                     onKeyDown = {handleEnter}
                 />
                 <button 
+                    className="fa fa-smile-o send-emoji-btn" 
+                    aria-hidden="true" 
+                    onClick={handleToggleEmojiPicker}
+                />
+                <button 
                     className="fa fa-paper-plane send-message-btn" 
                     aria-hidden="true" 
                     onClick={sendMessage}
                 />
-                </div>
+            </div>
         </div> 
     </>
     

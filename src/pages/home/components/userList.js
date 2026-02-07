@@ -90,7 +90,7 @@ const UsersList = ({searchKey, socket, onlineUsers})=>{
         }else return ""
     }
 
-    const getData = (searchKey) =>{
+    const getData = () =>{
         if(searchKey === ""){
             return allChats
         }else{
@@ -130,7 +130,7 @@ const UsersList = ({searchKey, socket, onlineUsers})=>{
     },[])
 
     return(
-        getData(searchKey)?.map(obj =>{
+        getData().map(obj =>{
             let user = obj
             if(obj.members){
                 user = obj.members.find(mem => mem._id !== currentUser._id)

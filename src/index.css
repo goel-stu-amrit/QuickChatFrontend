@@ -446,7 +446,7 @@ i{
 .send-message-input{
   width: 100%;
   height: 40px;
-  padding: 10px 20px;
+  padding: 10px 90px 10px 20px;
   border-radius: 5px;
   color: #28282B;
   border: #ddd 1px solid;
@@ -455,6 +455,17 @@ i{
 .send-message-btn{
   position: absolute;
   right: 10px;
+  font-size: 25px;
+  color: #e74c3c;
+  cursor: pointer;
+  border: none;
+  background-color: transparent;
+  margin-top: 6px;
+}
+
+.send-emoji-btn{
+  position: absolute;
+  right: 50px;
   font-size: 25px;
   color: #e74c3c;
   cursor: pointer;
@@ -481,4 +492,69 @@ i{
 .typing-indicator{
   font-size: 13px;
   color: grey;
+}
+
+.profile-page-container{
+  display:flex;
+  width:80%;
+  color:#28282B;
+  margin:120px auto;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.35);
+}
+
+.profile-pic-container{
+  width: 30%;
+  display: flex;
+  justify-content: center;
+}
+
+.profile-info-container{
+  width: 70%;
+  padding:30px 10px;
+}
+
+.user-default-profile-avatar, .user-profile-pic-upload{
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  color: #28282B;
+  border: #ddd 5px solid;
+  font-size: 120px;
+  text-align: center;
+  font-weight: bold;
+  vertical-align: middle;
+  line-height: 230px;
+}
+
+.user-profile-name{
+  padding: 10px 0px;
+  border-bottom: #cdcdcd 1.5px solid;
+  margin-bottom: 30px;
+}
+
+.select-profile-pic-container{
+  padding: 30px 0px;
+}
+
+input[type="file"]::file-selector-button{
+  border-radius: 4px;
+  padding: 0 16px;
+  height: 40px;
+  cursor: pointer;
+  background-color: #28282B;
+  color: white;
+  border: 1px solid rgba(0,0,0,0.16);
+  box-shadow: 0px 1px 3px rgba(0,0,0,0.05);
+}
+
+input[type="file"]::file-selector-button:hover{
+  background-color: #f3f4f6;
+  color: #28282B;
+}
+
+input[type="file"]::file-selector-button:active{
+  background-color: #e5e7eb;
+  color: #28282B;
 }
