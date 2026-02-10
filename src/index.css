@@ -232,7 +232,7 @@ i{
   color: #28282B;
   font-weight: bold;
   padding-top: 10px;
-  padding-right: 20px;
+  padding-right: 15px;
   margin-left: 15px;
 }
 
@@ -249,6 +249,15 @@ i{
   line-height: 40px;
   cursor: pointer;
 }
+
+.logout-btn{
+  background-color: transparent;
+  border: none;
+  color: #e74c3c;
+  font-size: 18px;
+  cursor: pointer;
+}
+
 
 .app-sidebar{
   width:30%;
@@ -446,15 +455,15 @@ i{
 .send-message-input{
   width: 100%;
   height: 40px;
-  padding: 10px 90px 10px 20px;
+  padding: 10px 135px 10px 20px;
   border-radius: 5px;
   color: #28282B;
   border: #ddd 1px solid;
 }
 
-.send-message-btn{
+.send-image-btn{
   position: absolute;
-  right: 10px;
+  right: 80px;
   font-size: 25px;
   color: #e74c3c;
   cursor: pointer;
@@ -473,6 +482,19 @@ i{
   background-color: transparent;
   margin-top: 6px;
 }
+
+.send-message-btn{
+  position: absolute;
+  right: 10px;
+  font-size: 25px;
+  color: #e74c3c;
+  cursor: pointer;
+  border: none;
+  background-color: transparent;
+  margin-top: 6px;
+}
+
+
 
 @media only screen and (max-width:1000px) {
   .filter-user-details, .last-message-timestamp, .unread-message-counter {

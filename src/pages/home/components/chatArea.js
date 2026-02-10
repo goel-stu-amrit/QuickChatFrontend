@@ -17,13 +17,20 @@ const ChatArea = ({ socket }) =>{
     const [allMessages, setAllMessages] = useState([])
     const [isTyping, setIsTyping] = useState(false)
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+    const [data, setData] = useState(null)
 
-    const sendMessage = async () =>{
+    const sendMessage = async (image) =>{
+        const trimmedMessage = message.trim()
+        if(!image && !trimmedMessage){
+            setMessage("")
+            return
+        }
         try{
             const newMessage = {
                 chatId: selectedChat._id,
                 sender: user._id,
-                text: message
+                text: trimmedMessage,
+                image: image
             }
 
             socket.emit('send-message', {
@@ -108,6 +115,18 @@ const ChatArea = ({ socket }) =>{
     const handleToggleEmojiPicker = () =>{
         setShowEmojiPicker(!showEmojiPicker)
     }
+
+    const sendImage = async (e) =>{
+        const file = e.target.files[0]
+
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+
+        reader.onloadend = async () =>{
+            sendMessage(reader.result)
+        }
+
+    }
     
     useEffect(()=>{
         getMessages()
@@ -115,7 +134,7 @@ const ChatArea = ({ socket }) =>{
             clearUnreadMessages()
         }
 
-        socket.on('receive-message', (message)=>{
+        socket.off('receive-message').on('receive-message', (message)=>{
             const selectedChat = store.getState().userReducer.selectedChat
             if(selectedChat._id === message.chatId){
                 setAllMessages(prevmsg =>[...prevmsg , message])
@@ -151,6 +170,7 @@ const ChatArea = ({ socket }) =>{
         })
 
         socket.on('started-typing', (data) =>{
+            setData(data)
             if(selectedChat._id === data.chatId && data.sender !== user._id){
                 setIsTyping(true)
                 setTimeout(()=>{
@@ -179,7 +199,8 @@ const ChatArea = ({ socket }) =>{
                             <div className="message-container" style={isCurrentUserSender ? {justifyContent : "end"} : {justifyContent : "start"}}>
                                 <div>
                                     <div className={isCurrentUserSender ? "send-message":"received-message"}>
-                                        {msg.text}
+                                        <div>{msg.text}</div>
+                                        <div>{msg.image && <img src={msg.image} alt="image" height='120px' width='120px' />}</div>
                                     </div>
                                     <div className="message-timestamp" style={isCurrentUserSender? {float:"right"} : {float: "left"}}>
                                         {formatTime(msg.createdAt)}
@@ -193,12 +214,16 @@ const ChatArea = ({ socket }) =>{
                         )
                     })
                 }
-                <div className="typing-indicator">{isTyping && <i>typing...</i>}</div>
+                <div className="typing-indicator">
+                    {isTyping && selectedChat?.members.map(m=>m._id).includes(data?.sender) &&
+                        <i>typing...</i>
+                    }
+                </div>
             </div>
             {
                 showEmojiPicker &&
-                <div>
-                    <EmojiPicker onEmojiClick={(e) => setMessage(prev => prev + e.emoji)} />
+                <div style={{width:'100%', display:'flex', padding:'0px 20px', justifyContent:'right'}}>
+                    <EmojiPicker style={{width:'300px', height:'400px'}} onEmojiClick={(e) => setMessage(prev => prev + e.emoji)} />
                 </div>
             }
             <div className="send-message-div">
@@ -217,6 +242,18 @@ const ChatArea = ({ socket }) =>{
                     }}
                     onKeyDown = {handleEnter}
                 />
+                <label for="file">
+                    <i className="fa fa-picture-o send-image-btn"></i>
+                    <input 
+                        type="file"
+                        id="file"
+                        style={{display:'none'}}
+                        accept="image/jpg, image/png, image/jpeg, image/gif"
+                        onChange={sendImage}
+                    />
+                    
+                </label>
+
                 <button 
                     className="fa fa-smile-o send-emoji-btn" 
                     aria-hidden="true" 
@@ -225,7 +262,7 @@ const ChatArea = ({ socket }) =>{
                 <button 
                     className="fa fa-paper-plane send-message-btn" 
                     aria-hidden="true" 
-                    onClick={sendMessage}
+                    onClick={() =>sendMessage('')}
                 />
             </div>
         </div> 

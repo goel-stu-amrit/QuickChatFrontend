@@ -94,7 +94,7 @@ const UsersList = ({searchKey, socket, onlineUsers})=>{
         if(searchKey === ""){
             return allChats
         }else{
-            allUsers.filter(user=>{
+            return allUsers.filter(user=>{
                 return  user.firstName.toLowerCase().includes(searchKey.toLowerCase()) || 
                 user.lastName.toLowerCase().includes(searchKey.toLowerCase())
             })
@@ -102,7 +102,7 @@ const UsersList = ({searchKey, socket, onlineUsers})=>{
     }
 
     useEffect(()=>{
-        socket.on('receive-message', (message)=>{
+        socket.off('set-message-count').on('set-message-count', (message)=>{
             const selectedChat = store.getState().userReducer.selectedChat
             let allChats = store.getState().userReducer.allChats
 
