@@ -1,5 +1,6 @@
 import axios from "axios"
-export const url ="http://localhost:5000"
+
+export const url = process.env.BACKEND_URL
 
 export const axiosInstance  = axios.create({
     headers: {
