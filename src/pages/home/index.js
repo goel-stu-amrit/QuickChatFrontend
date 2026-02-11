@@ -5,7 +5,7 @@ import { useSelector } from "react-redux"
 import { io } from "socket.io-client"
 import {useEffect, useState} from 'react'
 
-const socket = io(process.env.BACKEND_URL)
+const socket = io(process.env.REACT_APP_BACKEND_URL)
 const Home = () => {
   const {selectedChat, user} = useSelector(state => state.userReducer)
   const [onlineUsers, setOnlineUsers] = useState([])
