@@ -40,14 +40,13 @@ const ChatArea = ({ socket }) =>{
                 createdAt:moment().format('YYYY-MM-DD hh:mm:ss')
             })
             const response = await createNewMessage(newMessage)
-
+            console.log(response.data)
             if(response.success){
                 setMessage("")
                 setShowEmojiPicker(false)
             }
 
         }catch(error){
-            dispatch(hideLoader())
             toast.error(error.message)
         }
     }
@@ -200,7 +199,7 @@ const ChatArea = ({ socket }) =>{
                                 <div>
                                     <div className={isCurrentUserSender ? "send-message":"received-message"}>
                                         <div>{msg.text}</div>
-                                        <div>{msg.image && <img src={msg.image} alt="image" height='120px' width='120px' />}</div>
+                                        <div>{msg.image && <img src={msg.image} alt="selected-image" height='120px' width='120px' />}</div>
                                     </div>
                                     <div className="message-timestamp" style={isCurrentUserSender? {float:"right"} : {float: "left"}}>
                                         {formatTime(msg.createdAt)}

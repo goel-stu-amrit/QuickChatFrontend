@@ -2,7 +2,6 @@ import {useEffect} from 'react'
 import toast from "react-hot-toast"
 import { useDispatch, useSelector } from "react-redux"
 import { createNewChat } from "../../../apiCalls/chat"
-import { showLoader, hideLoader} from "../../../redux/loaderSlice"
 import { setAllChats, setSelectedChat } from "../../../redux/usersSlice"
 import store from '../../../redux/store'
 import moment from "moment"
@@ -14,20 +13,18 @@ const UsersList = ({searchKey, socket, onlineUsers})=>{
     const startNewChat = async (selectedUserId) =>{
         let response = null
         try{
-            dispatch(showLoader())
             response = await createNewChat([currentUser._id, selectedUserId])
-            dispatch(hideLoader())
- 
+            console.log(allChats)
             if(response.success){
                 toast.success(response.message)
                 const newChat = response.data
-                const updatedChats =[...allChats, newChat]
-                dispatch(setAllChats(updatedChats))
+                console.log(newChat)
+                socket.emit('start-new-chat', newChat)
+                dispatch(setAllChats([...allChats, newChat]))
                 dispatch(setSelectedChat(newChat))
             }
         }catch(error){
             toast.error(response.message)
-            dispatch(hideLoader())
         }
     }
 
@@ -61,7 +58,7 @@ const UsersList = ({searchKey, socket, onlineUsers})=>{
     }
 
     const getLastMessage = (userId) =>{
-        const chat = allChats.find(chat =>chat.members.map(m => m._id).includes(userId))
+        const chat = allChats?.find(chat =>chat.members.map(m => m._id).includes(userId))
 
         if(!chat || !chat?.lastMessage){
             return ""
@@ -126,6 +123,14 @@ const UsersList = ({searchKey, socket, onlineUsers})=>{
 
             allChats = [latestChat, ...otherChats]
             dispatch(setAllChats(allChats))
+        })
+
+        socket.on('new-chat-started', (chat) =>{
+            const allChats = store.getState().userReducer.allChats
+            const chatExists = allChats.find(c => c._id === chat._id)
+            if(!chatExists){
+                dispatch(setAllChats([...allChats, chat]))
+            }
         })
     },[])
 
