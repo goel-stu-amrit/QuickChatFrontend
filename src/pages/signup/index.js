@@ -1,6 +1,6 @@
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import {Link, useNavigate} from 'react-router-dom'
-import {signupUser, verifyEmail} from './../../apiCalls/auth'
+import {checkOTPStatus, resendOTP, signupUser, verifyEmail} from './../../apiCalls/auth'
 import toast from 'react-hot-toast'
 import { useDispatch } from 'react-redux'
 import { showLoader, hideLoader } from '../../redux/loaderSlice'
@@ -8,6 +8,8 @@ import { showLoader, hideLoader } from '../../redux/loaderSlice'
 function Signup(){
   const [step, setStep] = useState("signup")
   const [otp, setOTP] = useState(["","","","","",""])
+  const [resendTimer, setResendTimer] = useState(0)
+  const [OTPExpired, setOTPExpired] = useState(false)
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
@@ -27,7 +29,12 @@ function Signup(){
       dispatch(hideLoader())
       if(response.success){
         toast.success(response.message)
+        localStorage.setItem("pendingVerificationEmail", JSON.stringify({
+          email: user.email,
+          time: Date.now()
+        }))
         setStep("OTP")
+        setResendTimer(60)
       }else{
         toast.error(response.message)
       }
@@ -59,6 +66,7 @@ function Signup(){
 
       if(response.success){
         toast.success(response.message)
+        localStorage.removeItem("pendingVerificationEmail")
         navigate('/login')
       }else{
         toast.success(response.message)
@@ -80,6 +88,92 @@ function Signup(){
       document.getElementById(`otp-${idx+1}`).focus()
     }
   }
+
+  const handleResendOTP = async () =>{
+    try{
+      dispatch(showLoader())
+      const response = await resendOTP(user.email)
+      dispatch(hideLoader())
+
+      if(response.success){
+        toast.success("OTP sent successfully")
+        setResendTimer(60)
+        setOTPExpired(false)
+      }else{
+        toast.error(response.message)
+      }
+    }catch(error){
+      dispatch(hideLoader())
+      toast.error("Unable to resend OTP")
+    }
+  }
+
+  const handleOTPKeyDown = async (e, idx) =>{
+    const key  = e.key
+
+    if(key === "Backspace"){
+      e.preventDefault()
+      const newOTP = [...otp]
+
+      if(newOTP[idx]){
+        newOTP[idx] = ''
+        setOTP(newOTP)
+      }else if(idx > 0){
+        document.getElementById(`otp-${idx-1}`).focus()
+        newOTP[idx-1] = ""
+        setOTP(newOTP)
+      }
+    }
+  }
+
+  const checkOtpStatus = async() =>{
+      const raw = localStorage.getItem("pendingVerificationEmail")
+      if(!raw) return;
+
+      const {email} = JSON.parse(raw)
+
+      const response = await checkOTPStatus(email)
+
+      if(response.success){
+        if(response.otpExpired){
+          setOTPExpired(true)
+          toast.error("OTP has expired. Please resend OTP")
+        }
+      }
+    }
+
+  useEffect(()=>{
+    const data = JSON.parse(localStorage.getItem("pendingVerificationEmail"))
+
+    if(!data){
+      setStep("signup")
+      return;
+    }
+
+    const isExpired = Date.now() - data.time > 24*60*60*1000
+
+    if (isExpired){
+      localStorage.removeItem("pendingVerificationEmail")
+    }
+    else{
+      setUser(prev => ({...prev, email:data.email}))
+      setStep("OTP")
+    }
+  },[])
+
+  useEffect(()=>{
+    if(!resendTimer) return;
+
+    const timer = setTimeout(() => {
+      setResendTimer(prev => prev -1)
+    }, 1000);
+
+    return () => clearTimeout(timer)
+  },[resendTimer])
+
+  useEffect(()=>{
+    checkOtpStatus()
+  },[])
 
   return (
     <div className="container">
@@ -122,7 +216,7 @@ function Signup(){
           }
           {
             step === "OTP" &&
-            <form onSubmit={onVerifyOTP}>
+            <form autoComplete="off" onSubmit={onVerifyOTP}>
               <p>Enter the 6-digit OTP sent to your email</p>
 
               <input 
@@ -145,12 +239,26 @@ function Signup(){
                       onChange={(e)=>{
                         handleOTPChange(e.target.value, index)
                       }}
+                      onKeyDown={(e)=>{
+                        handleOTPKeyDown(e, index)
+                      }}
                     />
                   ))
                 }
               </div>
 
-              <button>Verify OTP</button>
+              <button disabled={OTPExpired}>Verify OTP</button>
+
+              <button 
+                type="button"
+                className="resend-otp-btn"
+                disabled={resendTimer> 0}
+                onClick={handleResendOTP}
+              >
+                {
+                  resendTimer > 0? `Resend OTP in ${resendTimer}s`: "Resend OTP"
+                }
+              </button>
             </form>
           }
         </div>
