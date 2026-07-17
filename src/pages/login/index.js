@@ -4,10 +4,11 @@ import { loginUser } from '../../apiCalls/auth'
 import toast from 'react-hot-toast'
 import { useDispatch } from 'react-redux'
 import { hideLoader,showLoader } from '../../redux/loaderSlice'
+import { setUser } from '../../redux/usersSlice'
 
 const Login = () => {
   const dispatch = useDispatch()
-  const [user, setUser] = useState({
+  const [cred, setCred] = useState({
     email:'',
     password:''
   })
@@ -17,10 +18,11 @@ const Login = () => {
     let response = null
     try{
       dispatch(showLoader())
-      response = await loginUser(user)
+      response = await loginUser(cred)
       dispatch(hideLoader())
       if(response.success){
         toast.success(response.message)
+        dispatch(setUser(response.data))
         localStorage.setItem('token',response.token)
         window.location.href = "/";
       }else{
@@ -45,14 +47,14 @@ const Login = () => {
             <input
               type="email"
               placeholder='Email'
-              value={user.email}
-              onChange={(e)=>{setUser({...user, email: e.target.value})}}
+              value={cred.email}
+              onChange={(e)=>{setCred({...cred, email: e.target.value})}}
             />
             <input 
               type="password"
               placeholder='Password'
-              value={user.password}
-              onChange={(e)=>{setUser({...user, password: e.target.value})}}
+              value={cred.password}
+              onChange={(e)=>{setCred({...cred, password: e.target.value})}}
             />
             <button>Login</button>
           </form>

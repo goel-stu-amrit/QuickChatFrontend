@@ -97,6 +97,10 @@ const Profile = () =>{
                     <b>Account Created: </b>
                     {formatTime(user?.createdAt)}
                 </div>
+                <div>
+                    <b>Role: </b>
+                        {user?.role}
+                </div>
                 <div className="select-profile-pic-container">
                     <input 
                         type="file"
